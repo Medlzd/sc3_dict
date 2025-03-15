@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    command: /env/bin/python -m gunicorn --bind 0.0.0.0:8000 --workers 3 dict.wsgi:application
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: elkherchybaba
+      POSTGRES_PASSWORD: kh@38405659
+      POSTGRES_DB: hassaniya_dict
+    ports:
+      - "5432:5432"
