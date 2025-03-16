@@ -129,10 +129,21 @@ class WordViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
-        serializer.save(created_by=self.request.user)
-        instance = serializer.save()
+        """Handles word creation, assigns points, and checks for new badges."""
+        instance = serializer.save(created_by=self.request.user)
+
+    # ✅ Log contribution
         Contribution.objects.create(user=self.request.user, word=instance, contribution_type='add')
-        PointsSystem.objects.filter(user=self.request.user).update(points=F('points') + 5)
+
+    # ✅ Ensure the user has a PointsSystem entry
+        points_entry, created = PointsSystem.objects.get_or_create(user=self.request.user)
+
+    # ✅ Update points
+        points_entry.points = F('points') + 5
+        points_entry.save()
+
+    # ✅ Check for new badges
+        award_badges(self.request.user)
     @action(detail=True, methods=['post'], permission_classes=[IsModeratorOrAdmin])
     def change_status(self, request, pk=None):
         """Allow only moderators or admins to approve or reject words."""
@@ -236,3 +247,15 @@ def leaderboard(request):
     ]
 
     return Response(leaderboard_data)
+def award_badges(user):
+    from core.models import Badge, PointsSystem
+
+    points_entry = PointsSystem.objects.get(user=user)
+    user_points = points_entry.points
+
+    eligible_badges = Badge.objects.filter(required_points__lte=user_points)
+
+    for badge in eligible_badges:
+        if badge not in user.badges.all():  # ✅ Prevent duplicate badges
+            user.badges.add(badge)
+            print(f"🏆 {user.username} unlocked: {badge.name}!")
