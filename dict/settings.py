@@ -65,7 +65,6 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'dict.urls'
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = ['http://localhost:3000','https://s3c.ghayty.com','https://hassaniya-dictionary.vercel.app/']
-CORS_ALLOWED_ORIGINS = ['http://localhost:3000','https://s3c.ghayty.com','https://hassaniya-dictionary.vercel.app/']
 CORS_ALLOW_HEADERS = [
     "accept",
     "accept-encoding",
@@ -76,10 +75,6 @@ CORS_ALLOW_HEADERS = [
     "user-agent",
     "x-csrftoken",
     "x-requested-with",
-]
-CORS_ALLOWED_ORIGIN_REGEXES = [
-    'https://s3c.ghayty.com',
-    r"^https://.*\.vercel\.app$",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
