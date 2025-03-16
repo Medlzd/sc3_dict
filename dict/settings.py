@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-b43=ies^4nnn*4b-@bmi2ms@%@8uvr-$j&!z#&0ph&j@j#%ap)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1','147.182.161.164']
+ALLOWED_HOSTS = ['127.0.0.1','147.182.161.164','s3c.ghayty.com','hassaniya-dictionary.vercel.app']
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -62,8 +62,8 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'dict.urls'
 CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOWED_ORIGINS = ['http://localhost:3000','http://147.182.161.164:8000']
-CORS_ALLOWED_ORIGINS = ['http://localhost:3000']
+CORS_ALLOWED_ORIGINS = ['http://localhost:3000','https://s3c.ghayty.com','https://hassaniya-dictionary.vercel.app/']
+CORS_ALLOWED_ORIGINS = ['http://localhost:3000','https://s3c.ghayty.com','https://hassaniya-dictionary.vercel.app/']
 CORS_ALLOW_HEADERS = [
     "accept",
     "accept-encoding",
