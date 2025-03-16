@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import UserViewSet, WordViewSet, ApprovalWorkflowViewSet, ContributionViewSet, PointsSystemViewSet, chatbot_query,LoginView,RegisterUserView
+from .views import UserViewSet, WordViewSet, ApprovalWorkflowViewSet, ContributionViewSet, PointsSystemViewSet, chatbot_query,LoginView,RegisterUserView, leaderboard
 router = DefaultRouter()
 router.register(r'users', UserViewSet)
 router.register(r'words', WordViewSet)
@@ -13,5 +13,6 @@ urlpatterns = [
     path('api/auth/login/', LoginView.as_view(), name='login_users'),
     path('api/auth/register/', RegisterUserView.as_view(), name='register_users'),
     path('chatbot/', chatbot_query, name='chatbot'),
+    path('leaderboard/', leaderboard, name='leaderboard'),
 
 ]

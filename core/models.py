@@ -65,8 +65,14 @@ class Contribution(models.Model):
    
     
 
+class RootWord(models.Model):
+    text = models.CharField(max_length=100, unique=True)
+    definition = models.TextField(blank=True, null=True)
+    translated = models.BooleanField(default=False)
 
 class PointsSystem(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     points = models.IntegerField(default=0)
     badges = models.TextField(blank=True, null=True)  # JSON field to store badge info
+    def __str__(self):
+        return f"{self.user.username} - {self.points} points"

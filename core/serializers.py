@@ -17,8 +17,14 @@ class UserSerializer(serializers.ModelSerializer):
 class WordSerializer(serializers.ModelSerializer):
     class Meta:
         model = Word
-        fields = '__all__'
+        fields = ['id', 'text', 'definition', 'status', 'created_at', 'moderator_comment']
+        read_only_fields = ['status', 'created_at', 'created_by']  # Ensure `created_by` is not required in input
 
+    def create(self, validated_data):
+        request = self.context.get('request')  # Get request context
+        if request and request.user.is_authenticated:
+            validated_data['created_by'] = request.user
+        return super().create(validated_data)
 class ApprovalWorkflowSerializer(serializers.ModelSerializer):
     class Meta:
         model = ApprovalWorkflow

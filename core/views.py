@@ -6,14 +6,17 @@ from .serializers import UserSerializer, WordSerializer, ApprovalWorkflowSeriali
 from .utils import search_word_in_pdfs, generate_definition
 import json
 from core.models import WordHistory  # Assure-toi que le modèle est bien importé
-
+from django.db.models import F
 from rest_framework.decorators import action
 from rest_framework.response import Response
-
-
+from rest_framework.decorators import api_view,permission_classes
+from rest_framework.response import Response
+from rest_framework.permissions import AllowAny
 from rest_framework import status
 from rest_framework.views import APIView
-
+from rest_framework.response import Response
+from core.models import PointsSystem
+from django.contrib.auth import get_user_model
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
@@ -125,31 +128,31 @@ class WordViewSet(viewsets.ModelViewSet):
     serializer_class = WordSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def perform_create(self, serializer):
+        serializer.save(created_by=self.request.user)
+        instance = serializer.save()
+        Contribution.objects.create(user=self.request.user, word=instance, contribution_type='add')
+        PointsSystem.objects.filter(user=self.request.user).update(points=F('points') + 5)
     @action(detail=True, methods=['post'], permission_classes=[IsModeratorOrAdmin])
     def change_status(self, request, pk=None):
-        """Permet aux modérateurs de changer le statut d'un mot."""
+        """Allow only moderators or admins to approve or reject words."""
         word = self.get_object()
         new_status = request.data.get('status')
         comment = request.data.get('comment', '')
-        
+
         if new_status not in ['review', 'approved']:
-            return Response({'error': 'Statut invalide'}, status=400)
-        
-        # Enregistrer l'historique
-        WordHistory.objects.create(
-            word=word,
-            previous_status=word.status,
-            new_status=new_status,
-            changed_by=request.user,
-            comment=comment
-        )
-        
-        # Mettre à jour le mot
+            return Response({'error': 'Invalid status'}, status=400)
+
+    # Approve the word
         word.status = new_status
         word.moderator_comment = comment
         word.save()
-        return Response({'message': f'Statut mis à jour en {new_status}'})
-    
+
+    # Award 10 points to the user who proposed the word
+        PointsSystem.objects.filter(user=word.created_by).update(points=F('points') + 10)
+
+        return Response({'message': f'Word status updated to {new_status}'})
+
     @action(detail=True, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     def history(self, request, pk=None):
         """Récupère l'historique des changements de statut d'un mot."""
@@ -216,3 +219,20 @@ def chatbot_query(request):
         return JsonResponse({"word": user_input, "definition": ai_response})
 
     return JsonResponse({"error": "Requête invalide"}, status=400)
+User = get_user_model()
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def leaderboard(request):
+    """Get all users sorted by points, including those with 0 points."""
+    users = User.objects.annotate(
+        points=F('pointssystem__points')  # Join with PointsSystem
+    ).order_by('-points')
+
+    # Format the response
+    leaderboard_data = [
+        {"username": user.username, "points": user.points if user.points is not None else 0}
+        for user in users
+    ]
+
+    return Response(leaderboard_data)
