@@ -77,6 +77,11 @@ CORS_ALLOW_HEADERS = [
     "x-csrftoken",
     "x-requested-with",
 ]
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    'https://s3c.ghayty.com',
+    r"^https://.*\.vercel\.app$",
+]
+
 CORS_ALLOW_CREDENTIALS = True
 TEMPLATES = [
     {
