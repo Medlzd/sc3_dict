@@ -17,17 +17,19 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from core.models import PointsSystem
 from django.contrib.auth import get_user_model
+from django.db.models import Sum
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType  # ✅ Import this!
-
+from django.db.models import Sum, F, Value
+from django.db.models.functions import Coalesce
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [AllowAny]
     
 class IsModeratorOrAdmin(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -126,7 +128,7 @@ class RegisterUserView(APIView):
 class WordViewSet(viewsets.ModelViewSet):
     queryset = Word.objects.all()
     serializer_class = WordSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [AllowAny]
 
     def perform_create(self, serializer):
         """Handles word creation, assigns points, and checks for new badges."""
@@ -164,7 +166,7 @@ class WordViewSet(viewsets.ModelViewSet):
 
         return Response({'message': f'Word status updated to {new_status}'})
 
-    @action(detail=True, methods=['get'], permission_classes=[permissions.IsAuthenticated])
+    @action(detail=True, methods=['get'], permission_classes=[AllowAny])
     def history(self, request, pk=None):
         """Récupère l'historique des changements de statut d'un mot."""
         word = self.get_object()
@@ -175,13 +177,13 @@ class WordViewSet(viewsets.ModelViewSet):
 class ApprovalWorkflowViewSet(viewsets.ModelViewSet):
     queryset = ApprovalWorkflow.objects.all()
     serializer_class = ApprovalWorkflowSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [AllowAny]
 
 
 class ContributionViewSet(viewsets.ModelViewSet):
     queryset = Contribution.objects.all()
     serializer_class = ContributionSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [AllowAny]
 
     @action(detail=True, methods=['post'], permission_classes=[IsModeratorOrAdmin])
     def add_comment(self, request, pk=None):
@@ -197,7 +199,7 @@ class ContributionViewSet(viewsets.ModelViewSet):
 class PointsSystemViewSet(viewsets.ModelViewSet):
     queryset = PointsSystem.objects.all()
     serializer_class = PointsSystemSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [AllowAny]
 
 @csrf_exempt
 def chatbot_query(request):
@@ -235,27 +237,41 @@ User = get_user_model()
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def leaderboard(request):
-    """Get all users sorted by points, including those with 0 points."""
-    users = User.objects.annotate(
-        points=F('pointssystem__points')  # Join with PointsSystem
-    ).order_by('-points')
+    """Returns a public leaderboard sorted by points (descending) with correct ranking."""
 
-    # Format the response
-    leaderboard_data = [
-        {"username": user.username, "points": user.points if user.points is not None else 0}
-        for user in users
-    ]
+    # ✅ Ensure users with no points still appear (use `Coalesce` to replace `None` with 0)
+    users_with_points = User.objects.annotate(
+        total_points=Coalesce(Sum('pointssystem__points'), Value(0))  # ✅ Fix None issue
+    ).order_by('-total_points')
+
+    leaderboard_data = []
+    rank = 0
+    previous_points = None
+
+    for index, user in enumerate(users_with_points):
+        user_points = user.total_points  # ✅ Guaranteed to be at least 0 now
+        
+        # ✅ Only increase rank if points change
+        if previous_points is None or user_points < previous_points:
+            rank = index + 1  # ✅ Rank increases only when points decrease
+        
+        previous_points = user_points  # ✅ Store points for next loop iteration
+
+        leaderboard_data.append({
+            "rank": rank,
+            "username": user.username,
+            "points": user_points
+        })
 
     return Response(leaderboard_data)
-def award_badges(user):
-    from core.models import Badge, PointsSystem
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def user_badges(request, user_id):
+    """Retrieve all badges a user has earned."""
+    user = User.objects.get(id=user_id)
+    badges = user.badges.all().values("name", "description")
 
-    points_entry = PointsSystem.objects.get(user=user)
-    user_points = points_entry.points
-
-    eligible_badges = Badge.objects.filter(required_points__lte=user_points)
-
-    for badge in eligible_badges:
-        if badge not in user.badges.all():  # ✅ Prevent duplicate badges
-            user.badges.add(badge)
-            print(f"🏆 {user.username} unlocked: {badge.name}!")
+    return Response({
+        "username": user.username,
+        "badges": list(badges)
+    })
