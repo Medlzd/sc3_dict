@@ -4,8 +4,16 @@ from .models import User, Word, ApprovalWorkflow, Contribution, PointsSystem
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'username', 'email', 'role']
-
+        fields = ['id', 'username', 'password', 'role','email']
+    def create(self, validated_data):
+        user = User.objects.create(
+            username=validated_data["username"],
+            email=validated_data["email"],
+            role=validated_data.get("role", "contributor")
+        )
+        user.set_password(validated_data["password"])
+        user.save()
+        return user
 class WordSerializer(serializers.ModelSerializer):
     class Meta:
         model = Word

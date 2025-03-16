@@ -23,9 +23,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-b43=ies^4nnn*4b-@bmi2ms@%@8uvr-$j&!z#&0ph&j@j#%ap)'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['127.0.0.1','147.182.161.164','s3c.ghayty.com','hassaniya-dictionary.vercel.app']
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -43,6 +43,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'rest_framework',
     
+    'rest_framework.authtoken',
+    'corsheaders',
     'core',
      'rest_framework_simplejwt',
     'django.contrib.staticfiles',
@@ -53,13 +55,28 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    'corsheaders.middleware.CorsMiddleware', 
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
 ROOT_URLCONF = 'dict.urls'
-
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = ['http://localhost:3000','https://s3c.ghayty.com','https://hassaniya-dictionary.vercel.app/']
+CORS_ALLOWED_ORIGINS = ['http://localhost:3000','https://s3c.ghayty.com','https://hassaniya-dictionary.vercel.app/']
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding",
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
+CORS_ALLOW_CREDENTIALS = True
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -88,30 +105,14 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'hassaniya_dict',
-        'USER': 'toukha',
-        'PASSWORD': 'Cm22404546',
-        'HOST': 'localhost',
+        'USER': 'elkherchybaba',
+        'PASSWORD': 'kh@38405659',
+        'HOST': 'db',
         'PORT': '5432',
     }
 }
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'hassaniya_dict',
-#         'USER': 'root',
-#         'PASSWORD': '',
-#         'HOST': 'localhost',
-#         'PORT': '3306',  
-#         'OPTIONS': {
-#             'charset': 'utf8mb4',
-#             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-
-#         },
-#     }
-# }
-
-
+AUTH_USER_MODEL = "core.User"
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -131,7 +132,14 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',  # Assurez-vous que l'accès est sécurisé
+    ],
+}
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
 

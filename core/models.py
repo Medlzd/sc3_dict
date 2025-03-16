@@ -8,9 +8,14 @@ class User(AbstractUser):
         ('contributor', 'Contributor')
     ]
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='contributor')
+    email = models.CharField(max_length=20)
+    groups = models.ManyToManyField(Group, related_name="core_user_groups", blank=True)
+    user_permissions = models.ManyToManyField(Permission, related_name="core_user_permissions", blank=True)
 
-    groups = models.ManyToManyField(Group, related_name="custom_user_groups", blank=True)
-    user_permissions = models.ManyToManyField(Permission, related_name="custom_user_permissions", blank=True)
+    class Meta:
+        permissions = [
+            ("can_manage_users", "Can manage users"),
+        ]
 class Word(models.Model):
     STATUS_CHOICES = [
         ('pending', 'Pending'),
