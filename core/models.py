@@ -17,11 +17,27 @@ class Word(models.Model):
         ('review', 'In Review'),
         ('approved', 'Approved')
     ]
-    text = models.CharField(max_length=255, unique=True)
+    text = models.CharField(max_length=100, unique=True)
     definition = models.TextField()
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
+    moderator_comment = models.TextField(blank=True, null=True)  # Nouveau champ
+    
+    def __str__(self):
+        return self.text
+
+class WordHistory(models.Model):
+    word = models.ForeignKey(Word, on_delete=models.CASCADE, related_name='history')
+    previous_status = models.CharField(max_length=20, choices=Word.STATUS_CHOICES)
+    new_status = models.CharField(max_length=20, choices=Word.STATUS_CHOICES)
+    changed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    changed_at = models.DateTimeField(auto_now_add=True)
+    comment = models.TextField(blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.word.text}: {self.previous_status} → {self.new_status}"
+
 
 class ApprovalWorkflow(models.Model):
     word = models.OneToOneField(Word, on_delete=models.CASCADE)
@@ -31,10 +47,19 @@ class ApprovalWorkflow(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
 class Contribution(models.Model):
+    ACTION_CHOICES = [
+        ('add', 'Add'),
+        ('edit', 'Edit'),
+        ('delete', 'Delete'),
+    ]
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     word = models.ForeignKey(Word, on_delete=models.CASCADE)
     action = models.CharField(max_length=50)  # Added, Edited, Approved
     timestamp = models.DateTimeField(auto_now_add=True)
+    
+   
+    
+
 
 class PointsSystem(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)

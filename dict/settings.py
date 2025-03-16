@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'rest_framework',
+    
     'core',
      'rest_framework_simplejwt',
     'django.contrib.staticfiles',
@@ -75,6 +76,8 @@ TEMPLATES = [
     },
 ]
 
+AUTH_USER_MODEL = 'core.User' 
+
 WSGI_APPLICATION = 'dict.wsgi.application'
 
 
@@ -91,6 +94,23 @@ DATABASES = {
         'PORT': '5432',
     }
 }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': 'hassaniya_dict',
+#         'USER': 'root',
+#         'PASSWORD': '',
+#         'HOST': 'localhost',
+#         'PORT': '3306',  
+#         'OPTIONS': {
+#             'charset': 'utf8mb4',
+#             'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+
+#         },
+#     }
+# }
+
 
 
 # Password validation
